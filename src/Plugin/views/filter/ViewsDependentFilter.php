@@ -1,9 +1,26 @@
 <?php
+
+namespace Drupal\views_dependent_filter\Plugin\views\filter;
+
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Plugin\views\display\DisplayPluginBase;
+use Drupal\views\ViewExecutable;
+use Drupal\Core\Form\OptGroup;
+use Drupal\views\Plugin\views\filter\FilterPluginBase;
+
 /**
- *
+ * EREFNodeTitles.
  */
 
-class views_dependent_filters_handler_filter_dependent extends views_handler_filter {
+/**
+ * Filters by given list of related content title options.
+ *
+ * @ingroup views_filter_handlers
+ *
+ * @ViewsFilter("views_dependent_filter")
+ */
+class ViewsDependentFilter extends FilterPluginBase {
   /**
    * The list of filters subsequent to ourselves that we should remove.
    * An array of keys of $this->view->filter.
@@ -17,30 +34,26 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
     // This hacks subsequent handlers' options so they are no longer exposed.
     // Incoming values from these on submit will be simply ignored.
     foreach ($this->filters_kill as $filter_id) {
-      $this->view->filter[$filter_id]->options['exposed'] = FALSE;
+      $this->view->display_handler->getHandlers('filter')[$filter_id]->options['exposed'] = FALSE;
     }
   }
-
   /**
    * Enable the filters we control.
    */
   function filters_enable() {
     foreach ($this->filters_kill as $filter_id) {
-      $this->view->filter[$filter_id]->options['exposed'] = TRUE;
+      $this->view->display_handler->getHandlers('filter')[$filter_id]->options['exposed'] = TRUE;
     }
   }
 
-  function option_definition() {
-    $options = parent::option_definition();
-
+  protected function defineOptions() {
+    $options = parent::defineOptions();
     // Override the exposed default. This makes no sense not exposed.
     $options['exposed'] = array('default' => TRUE);
 
     $options['controller_filter'] = array('default' => NULL);
     $options['controller_values'] = array('default' => NULL);
     $options['dependent_filters'] = array('default' => array());
-
-
     return $options;
   }
 
@@ -54,9 +67,10 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
    *  An array of filters suitable for use as Form API options.
    */
   function get_filter_options($type) {
+    //kint($this);die();
     // Due to http://drupal.org/node/1426094 we can't just go looking in the
     // handlers array on the display.
-    $filters = $this->view->display_handler->get_handlers('filter');
+    $filters = $this->view->display_handler->getHandlers('filter');
 
     // Get the unique id of this handler (ie allow more than one of this handler).
     $this_id = $this->options['id'];
@@ -66,7 +80,7 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
     // Build up the options from all the fields up to this one but no further.
     foreach ($filters as $filter_id => $handler) {
       // Skip non-exposed filters.
-      if (!$handler->is_exposed()) {
+      if (!$handler->isExposed()) {
         continue;
       }
       // Required filters can't be dependent.
@@ -79,12 +93,12 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
         continue;
       }
       // Skip other instances of this filter.
-      if ($handler->definition['handler'] == 'views_dependent_filters_handler_filter_dependent') {
+      if ($handler->definition['handler'] == 'views_dependent_filter') {
         continue;
       }
-
-      $label = $handler->ui_name(TRUE);
-
+      //kint($handler);
+      //$label = $handler->ui_name(TRUE);
+      $label =$filter_id;
       // All filters may be controllers, but to simplify things we just allow
       // the ones that come before us.
       if (!$seen) {
@@ -95,7 +109,6 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
         $filters_dependent[$filter_id] = $label;
       }
     }
-
     switch ($type) {
       case 'controller':
         return $filters_controller;
@@ -110,8 +123,8 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
    * or to at least make sure all of the functions in this form
    * are called.
    */
-  function options_form(&$form, &$form_state) {
-    parent::options_form($form, $form_state);
+   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+     parent::buildOptionsForm($form, $form_state);
 
     // Lock the exposed checkbox.
     $form['expose_button']['checkbox']['checkbox']['#disabled'] = TRUE;
@@ -123,11 +136,9 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
     unset($form['expose_button']['button']);
 
     $filters = $this->view->display_handler->handlers['filter'];
-
     if (isset($this->options['controller_filter'])) {
       // Get the handler for the controller filter.
       $controller_filter = $filters[$this->options['controller_filter']];
-
       // Take copies of the form arrays to pass to the other handler.
       $form_copy = $form;
       $form_state_copy = $form_state;
@@ -137,7 +148,7 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
       $form_copy['operator']['#type'] = '';
 
       // Get the value form from the filter handler.
-      $controller_filter->value_form($form_copy, $form_state);
+      $controller_filter->valueForm($form_copy, $form_state);
       $controller_values_element = $form_copy['value'];
 
       // Clean up the form element.
@@ -147,7 +158,6 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
         // Force multiple.
         $controller_values_element['#multiple'] = TRUE;
       }
-
       // Add it to our own form element in the real form.
       $form['controller_values'] = array(
         '#title' => t('Controller values'),
@@ -169,12 +179,33 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
     }
   }
 
-  function has_extra_options() { return TRUE; }
+public function validateOptionsForm(&$form, FormStateInterface $form_state) {
+ $filters = $this->view->display_handler->getHandlers('filter');
+ $controller_filter = $this->options['controller_filter'];
+ //kint($controller_filter);
+ foreach($filters as $key=>$value) {
+  if($key == "views_dependent_filter")  {
+    $filters[$key]->options['expose']['identifier'] =  'views_dependent_filter';
+  }
+ }
+ //$identifier = $filters[$controller_filter]->options['expose']['identifier'];
+ //kint($identifier);
+ //die();
+}
+
+public function submitOptionsForm(&$form, FormStateInterface $form_state) {
+
+}
+  /**
+   * If a handler has 'extra options' it will get a little settings widget and
+   * another form called extra_options.
+   */
+  public function hasExtraOptions() { return TRUE; }
 
   /**
    * Provide defaults for the handler.
    */
-  function extra_options(&$option) { }
+  public function defineExtraOptions(&$option) { }
 
   /**
    * Extra settings form: select the controller filter.
@@ -182,7 +213,7 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
    * Selecting the controller filter here allows us to nicely show its value
    * form in the regular options form.
    */
-  function extra_options_form(&$form, &$form_state) {
+  public function buildExtraOptionsForm(&$form, FormStateInterface $form_state) {
     $options = $this->get_filter_options('controller');
     $form['controller_filter'] = array(
       '#type' => 'radios',
@@ -197,12 +228,14 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
    * Override the options form exposed options subform to show nothing, as the
    * options here don't make sense for us.
    */
-  function expose_form(&$form, &$form_state) { return; }
+  function showExposeForm(&$form, FormStateInterface $form_state) {
+    return;
+  }
 
   /**
    * Display the filter on the administrative summary.
    */
-  function admin_summary() {
+  function adminSummary() {
     $controller_filter = $this->options['controller_filter'];
     $dependent_filters = implode(', ', array_filter($this->options['dependent_filters']));
 
@@ -215,7 +248,8 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
   /**
    * Make our changes to the form but don't return anything ourselves.
    */
-  function exposed_form(&$form, &$form_state) {
+  function buildExposedForm(&$form, FormStateInterface $form_state) {
+    $filters = $this->view->display_handler->getHandlers('filter');
     // Build an array of dependency info.
     $dependency_info = array(
       // An array keyed by controller filter IDs, where the values are arrays
@@ -227,6 +261,8 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
       'controllers' => array(),
       // An array of dependent filter IDs.
       'dependents'  => array(),
+      // A lookup of filter IDs to filter URL identifiers.
+      'identifiers' => array(),
     );
     if (!empty($this->options['controller_filter'])) {
       $controller_filter = $this->options['controller_filter'];
@@ -242,14 +278,25 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
         }
 
         $dependency_info['controllers'][$controller_filter] = $controller_values;
+
+        $identifier = $filters[$controller_filter]->options['expose']['identifier'];
+        $dependency_info['identifiers'][$controller_filter] = $identifier;
       }
     }
     $dependency_info['dependents'] = array_values(array_filter($this->options['dependent_filters']));
+    // Populate the identifiers lookup with our dependent filters.
+    foreach ($dependency_info['dependents'] as $dependent_filter_id) {
+      $identifier = $filters[$dependent_filter_id]->options['expose']['identifier'];
+      $dependency_info['identifiers'][$dependent_filter_id] = $identifier;
+    }
 
     //dsm($form_state['input'], 'input');
+    $filters = $this->view->display_handler->getHandlers('filter');
     foreach ($dependency_info['controllers'] as $filter_id => $controller_values) {
+      // Get the form identifier.
+      $identifier = $filters[$filter_id]->options['expose']['identifier'];
       // Get the input for this filter.
-      $input = $form_state['input'][$filter_id];
+      $input = &$form_state->getUserInput()[$identifier];
       // Convert values for non-multiple filters to an array.
       if (!$this->view->filter[$filter_id]->options['expose']['multiple']) {
         $input = array($input);
@@ -279,9 +326,8 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
     // Add our settings to the form state as an array, as we need to account
     // for the possiblity that more than one copy of this handler may be
     // playing at once!
-    $form_state['dependent_exposed_filters'][] = $dependency_info;
+    $form_state->dependent_exposed_filters[] = $dependency_info;
     $form['#after_build'] = array('views_dependent_filters_exposed_form_after_build');
-
     // Some clean-up for things that come later.
     // Mark ourselves not being exposed now we've done our work. This isn't
     // necessary for Views itself, but allows compatibility with the
@@ -305,7 +351,7 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
   /**
    * Prevent the view from accepting input from ourselves and dependents.
    */
-  function accept_exposed_input($input) {
+   function acceptExposedInput($input) {
     // Disable our dependent filters just before they have a chance to act
     // on exposed input.
     $this->filters_disable();
@@ -314,7 +360,7 @@ class views_dependent_filters_handler_filter_dependent extends views_handler_fil
     return TRUE;
   }
 
-  function value_form(&$form, &$form_state) {
+  function valueForm(&$form, FormStateInterface $form_state) {
     // Return nothing for the value form.
     $form['value'] = array();
   }
