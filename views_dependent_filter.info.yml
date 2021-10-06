@@ -7,5 +7,6 @@ description: 'views dependent filter'
 # Information added by Drupal.org packaging script on 2017-07-03
 version: '8.x-1.x-dev'
 core: '8.x'
+core_version_requirement: ^8 || ^9
 project: 'views_dependent_filter'
 datestamp: 1499099876

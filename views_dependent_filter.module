@@ -12,7 +12,7 @@ use Drupal\Component\Utility\Unicode;
 /**
  * After build form processor for the views exposed form.
  */
-function views_dependent_filters_exposed_form_after_build(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function views_dependent_filters_exposed_form_after_build(&$form, FormStateInterface $form_state) {
   // We may have multiple dependency info arrays from more than one copies
   // of the views_dependent_filters_handler_filter_dependent handler.
   foreach ($form_state->dependent_exposed_filters as $dependency_info) {
@@ -46,7 +46,7 @@ function views_dependent_filters_exposed_form_after_build(&$form, \Drupal\Core\F
  * it from the original input.
  */
 function views_dependent_filters_recreate_html_id($id) {
-  $id = strtr(Unicode::strtolower($id), array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
+  $id = strtr(mb_strtolower($id), array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
 
   // As defined in http://www.w3.org/TR/html4/types.html#type-name, HTML IDs can
   // only contain letters, digits ([0-9]), hyphens ("-"), underscores ("_"),
