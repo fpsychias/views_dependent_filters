@@ -1,13 +1,16 @@
 <?php
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Component\Utility\Unicode;
+
 /**
- * @file views_dependent_filters.module
+ * @file
+ * Views Dependent Filters module file.
+ *
  * Provides a Views exposed filter which makes other filters depend on values
- * in yet further filters for their visiblity and processing.
+ * in yet further filters for their visibility and processing.
  * For example: if the 'node type' filter is set to 'article', show a filter for
  * a field that is only present on articles.
  */
+
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * After build form processor for the views exposed form.
@@ -16,17 +19,17 @@ function views_dependent_filters_exposed_form_after_build($form, FormStateInterf
   // We may have multiple dependency info arrays from more than one copies
   // of the views_dependent_filters_handler_filter_dependent handler.
   foreach ($form_state->dependent_exposed_filters as $dependency_info) {
-    $form_dependency = array();
+    $form_dependency = [];
     foreach ($dependency_info['controllers'] as $filter_id => $controller_values) {
       $identifier = $dependency_info['identifiers'][$filter_id];
       // Regular form.
-      foreach($controller_values as $controller_value) {
+      foreach ($controller_values as $controller_value) {
         $part = ":input[name= $filter_id]";
         $form_dependency[$part]['value'] = $controller_value;
-        // Converting in array for multivalue fields
-        $form_dependency_array[]= $form_dependency;
+        // Converting in array for multi-value fields.
+        $form_dependency_array[] = $form_dependency;
       }
-      }
+    }
 
     // Set the dependency on each form element as required.
     foreach ($dependency_info['dependents'] as $dependent_filter_id) {
@@ -46,7 +49,10 @@ function views_dependent_filters_exposed_form_after_build($form, FormStateInterf
  * it from the original input.
  */
 function views_dependent_filters_recreate_html_id($id) {
-  $id = strtr(mb_strtolower($id), array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
+  $id = strtr(
+    mb_strtolower($id),
+    [' ' => '-', '_' => '-', '[' => '-', ']' => '']
+  );
 
   // As defined in http://www.w3.org/TR/html4/types.html#type-name, HTML IDs can
   // only contain letters, digits ([0-9]), hyphens ("-"), underscores ("_"),

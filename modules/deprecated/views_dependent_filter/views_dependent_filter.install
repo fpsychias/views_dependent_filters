@@ -1,13 +1,18 @@
 <?php
 
 /**
+ * @file
+ * Install file for deprecated views dependent filter module.
+ */
+
+/**
  * Uninstall misnamed module and install renamed one.
  */
 function views_dependent_filter_update_8001() {
   $views_to_save = [];
   $storage = \Drupal::entityTypeManager()->getStorage('view');
   $entities = $storage->getQuery()->accessCheck(FALSE)->execute();
-  foreach( $entities as $view_id) {
+  foreach ($entities as $view_id) {
     /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $view */
     $view = $storage->load($view_id);
     $dependencies = $view->getDependencies();
@@ -24,7 +29,7 @@ function views_dependent_filter_update_8001() {
   drupal_flush_all_caches();
   \Drupal::service('module_installer')->install(['views_dependent_filters']);
   drupal_flush_all_caches();
-  foreach($views_to_save as $view) {
+  foreach ($views_to_save as $view) {
     $view->calculateDependencies();
     $view->trustData();
     $view->save();

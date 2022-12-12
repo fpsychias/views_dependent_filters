@@ -2,7 +2,6 @@
 
 namespace Drupal\views_dependent_filter\Plugin\views\filter;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\filter\Broken;
 
 /**
