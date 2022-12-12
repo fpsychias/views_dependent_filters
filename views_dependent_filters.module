@@ -12,7 +12,7 @@ use Drupal\Component\Utility\Unicode;
 /**
  * After build form processor for the views exposed form.
  */
-function views_dependent_filters_exposed_form_after_build(&$form, FormStateInterface $form_state) {
+function views_dependent_filters_exposed_form_after_build($form, FormStateInterface $form_state) {
   // We may have multiple dependency info arrays from more than one copies
   // of the views_dependent_filters_handler_filter_dependent handler.
   foreach ($form_state->dependent_exposed_filters as $dependency_info) {
