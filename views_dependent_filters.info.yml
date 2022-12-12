@@ -1,0 +1,5 @@
+name: 'Views Dependent Filter'
+type: module
+description: 'Provides filters that allows views builders to set dependencies for exposed filters.'
+core: '8.x'
+core_version_requirement: ^8 || ^9

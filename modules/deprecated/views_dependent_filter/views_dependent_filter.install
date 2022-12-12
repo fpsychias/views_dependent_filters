@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * Uninstall misnamed module and install renamed one.
+ */
+function views_dependent_filter_update_8001() {
+  $views_to_save = [];
+  $storage = \Drupal::entityTypeManager()->getStorage('view');
+  $entities = $storage->getQuery()->accessCheck(FALSE)->execute();
+  foreach( $entities as $view_id) {
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $view */
+    $view = $storage->load($view_id);
+    $dependencies = $view->getDependencies();
+    if (empty($dependencies['module'])) {
+      continue;
+    }
+    if (array_search('views_dependent_filter', $dependencies['module']) !== FALSE) {
+      $views_to_save[] = $view;
+    }
+  }
+  unset($view);
+  unset($dependencies);
+  \Drupal::service('module_installer')->uninstall(['views_dependent_filter']);
+  drupal_flush_all_caches();
+  \Drupal::service('module_installer')->install(['views_dependent_filters']);
+  drupal_flush_all_caches();
+  foreach($views_to_save as $view) {
+    $view->calculateDependencies();
+    $view->trustData();
+    $view->save();
+  }
+}

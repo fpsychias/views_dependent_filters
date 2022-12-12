@@ -8,7 +8,7 @@
 /**
  * Implements hook_views_data_alter().
  */
-function views_dependent_filter_views_data_alter(array &$data) {
+function views_dependent_filters_views_data_alter(array &$data) {
   $data['views']['views_dependent_filter'] = [
     'title' => t('Dependent filter'),
     'filter' => [

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\views_dependent_filter\Plugin\views\filter;
+namespace Drupal\views_dependent_filters\Plugin\views\filter;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
