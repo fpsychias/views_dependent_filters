@@ -11,6 +11,26 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function views_dependent_filters_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the views_dependent_filters module.
+    case 'help.page.views_dependent_filters':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Allows the presence of exposed filters on a view to be
+      controlled by values in another exposed filter. Dependent filters are hidden
+      when not relevant, and their values are not considered when the exposed form
+      is submitted.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
 
 /**
  * After build form processor for the views exposed form.
