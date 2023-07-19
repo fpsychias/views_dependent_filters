@@ -1,5 +1,5 @@
 name: 'Views Dependent Filter (Deprecated)'
 type: module
 description: "Views Dependent Filters' original d8 module name was incorrect. Run database updates to uninstall this module."
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8.8 || ^9 || ^10
 hidden: true
