@@ -301,9 +301,9 @@ class ViewsDependentFilter extends FilterPluginBase {
       $input = &$form_state->getUserInput()[$identifier];
       // Convert values for non-multiple filters to an array.
       if (!$this->view->filter[$filter_id]->options['expose']['multiple']) {
-        $input = [$input];
+        $user_input = [$input];
       }
-      $intersection = array_intersect($input, $controller_values);
+      $intersection = array_intersect($user_input, $controller_values);
       if (!count($intersection)) {
         $this->filterKill = $dependency_info['dependents'];
       }
