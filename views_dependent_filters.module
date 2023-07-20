@@ -38,8 +38,12 @@ function views_dependent_filters_help($route_name, RouteMatchInterface $route_ma
 function views_dependent_filters_exposed_form_after_build($form, FormStateInterface $form_state) {
   // We may have multiple dependency info arrays from more than one copies
   // of the views_dependent_filters_handler_filter_dependent handler.
+  if (empty($form_state->dependent_exposed_filters)) {
+    return $form;
+  }
   foreach ($form_state->dependent_exposed_filters as $dependency_info) {
     $form_dependency = [];
+    $form_dependency_array = [];
     foreach ($dependency_info['controllers'] as $filter_id => $controller_values) {
       $identifier = $dependency_info['identifiers'][$filter_id];
       // Regular form.
@@ -59,31 +63,4 @@ function views_dependent_filters_exposed_form_after_build($form, FormStateInterf
     }
   }
   return $form;
-}
-
-/**
- * Convert a string to an HTML id matching one made with drupal_html_id().
- *
- * We can't simply call drupal_html_id() because that only returns unique
- * ids; this is intended for when the ID already exists and we want to recreate
- * it from the original input.
- */
-function views_dependent_filters_recreate_html_id($id) {
-  $id = strtr(
-    mb_strtolower($id),
-    [' ' => '-', '_' => '-', '[' => '-', ']' => '']
-  );
-
-  // As defined in http://www.w3.org/TR/html4/types.html#type-name, HTML IDs can
-  // only contain letters, digits ([0-9]), hyphens ("-"), underscores ("_"),
-  // colons (":"), and periods ("."). We strip out any character not in that
-  // list. Note that the CSS spec doesn't allow colons or periods in identifiers
-  // (http://www.w3.org/TR/CSS21/syndata.html#characters), so we strip those two
-  // characters as well.
-  $id = preg_replace('/[^A-Za-z0-9\-_]/', '', $id);
-
-  // Removing multiple consecutive hyphens.
-  $id = preg_replace('/\-+/', '-', $id);
-
-  return $id;
 }
