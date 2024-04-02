@@ -188,6 +188,14 @@ class ViewsDependentFilter extends FilterPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function validate() {
+    // The parent validate only checks for exposed form stuff. We don't need it.
+    return;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {
     $filters = $this->view->display_handler->getHandlers('filter');
     $controller_filter = $this->options['controller_filter'];
