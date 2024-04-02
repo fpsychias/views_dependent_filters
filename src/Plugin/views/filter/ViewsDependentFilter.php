@@ -149,6 +149,14 @@ class ViewsDependentFilter extends FilterPluginBase {
       $controller_filter->valueForm($form_copy, $form_state);
       $controller_values_element = $form_copy['value'];
 
+      if ($controller_filter->options['is_grouped']) {
+        $opts = $controller_filter->options['group_info']['group_items'];
+        foreach ($opts as $key => $opt) {
+            $opts[$key] = $opt['title'];
+        }
+        $controller_values_element['#options'] = $opts;
+      }
+
       // Clean up the form element.
       if ($controller_values_element['#type'] == 'checkboxes') {
         // We have to unset the 'select all' option on checkboxes.
